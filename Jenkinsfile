@@ -4,16 +4,13 @@ pipeline {
     environment {
         DOCKER_IMAGE = "jenkins-demo-app"
         DOCKER_TAG   = "${BUILD_NUMBER}"
+        SCANNER_HOME = tool 'SonarQube'  // Nom du scanner dans "Global Tool Configuration"
     }
 
     stages {
         stage('Checkout') {
             steps {
-                // Option 1 : ne rien faire (le code est déjà check-out)
                 echo 'Code déjà récupéré par Jenkins (from SCM)'
-
-                // Option 2 : si tu veux être explicite :
-                // checkout scm
             }
         }
 
@@ -26,6 +23,14 @@ pipeline {
         stage('Run Tests') {
             steps {
                 sh 'npm test'
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('SonarQube') {  // Nom du serveur dans "Configure System"
+                    sh "${SCANNER_HOME}/bin/sonar-scanner"
+                }
             }
         }
 
@@ -49,6 +54,9 @@ pipeline {
     post {
         success {
             sh 'docker image prune -f'
+        }
+        failure {
+            echo 'Le pipeline a échoué, vérifier les logs.'
         }
     }
 }
