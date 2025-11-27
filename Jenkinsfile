@@ -9,7 +9,11 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                checkout scm
+                // Option 1 : ne rien faire (le code est déjà check-out)
+                echo 'Code déjà récupéré par Jenkins (from SCM)'
+
+                // Option 2 : si tu veux être explicite :
+                // checkout scm
             }
         }
 
@@ -21,7 +25,6 @@ pipeline {
 
         stage('Run Tests') {
             steps {
-                // adapte si ton package.json utilise une autre commande
                 sh 'npm test'
             }
         }
@@ -37,7 +40,6 @@ pipeline {
                 sh """
                   docker stop ${DOCKER_IMAGE} || true
                   docker rm ${DOCKER_IMAGE} || true
-
                   docker run -d --name ${DOCKER_IMAGE} -p 3000:3000 ${DOCKER_IMAGE}:${DOCKER_TAG}
                 """
             }
@@ -45,7 +47,6 @@ pipeline {
     }
 
     post {
-        // bonus simple : nettoyage des images inutilisées
         success {
             sh 'docker image prune -f'
         }
